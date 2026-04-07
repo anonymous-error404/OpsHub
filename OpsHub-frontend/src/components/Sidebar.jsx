@@ -1,11 +1,14 @@
 import React from 'react';
-import { LayoutDashboard, Receipt, ShieldCheck, Settings, LogOut, Wallet, Hexagon } from 'lucide-react';
+import { LayoutDashboard, Receipt, ShieldCheck, Settings, LogOut, Wallet, Hexagon, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
+
+import AddressReveal from './AddressReveal';
 
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'network', label: 'Network', icon: Users },
   { id: 'transactions', label: 'Transactions', icon: Receipt },
-  { id: 'escrow', label: 'Escrow Deals', icon: ShieldCheck },
+  { id: 'smart-contracts', label: 'Smart Contracts', icon: ShieldCheck },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
@@ -27,11 +30,6 @@ const SidebarItem = ({ icon: Icon, label, active, onClick, index }) => (
 const Sidebar = ({ activeTab, setActiveTab, user, onLogout }) => {
   const walletAddress = user?.wallet_address;
   const blockchainEnabled = user?.blockchain_enabled;
-
-  const truncateAddress = (addr) => {
-    if (!addr) return '—';
-    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
-  };
 
   return (
     <aside className="sidebar">
@@ -62,9 +60,9 @@ const Sidebar = ({ activeTab, setActiveTab, user, onLogout }) => {
           </div>
           {blockchainEnabled ? (
             <>
-              <p className="font-mono" style={{ fontSize: '0.85rem', color: 'var(--primary-light)', marginBottom: 'var(--space-2)' }}>
-                {truncateAddress(walletAddress)}
-              </p>
+              <div style={{ marginBottom: 'var(--space-2)' }}>
+                <AddressReveal address={walletAddress} className="text-primary-color" />
+              </div>
               <div className="flex items-center gap-2" style={{ fontSize: '0.7rem', color: 'var(--accent-green)' }}>
                 <span className="status-dot status-dot-green status-dot-pulse" />
                 <span>On-Chain Enabled</span>

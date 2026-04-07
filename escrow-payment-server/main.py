@@ -479,6 +479,9 @@ async def disburse_funds(contract_id: str):
     contract.status = ContractStatus.COMPLETED
     contract.completed_at = datetime.now().isoformat()
     
+    # Save changes to JSON file
+    save_contracts_to_json()
+    
     return MessageResponse(
         message=alert_message,
         contract_id=contract_id,

@@ -103,7 +103,7 @@ const SettingsPage = ({ user, onUserUpdate }) => {
             </motion.div>
             <h3 style={{ marginBottom: 'var(--space-2)' }}>Enable Blockchain</h3>
             <p className="text-sm text-secondary" style={{ marginBottom: 'var(--space-6)', maxWidth: 400, margin: '0 auto var(--space-6)' }}>
-              Create a custodial wallet and register your business on the blockchain. This enables on-chain transaction proofs and escrow settlements.
+              Create a custodial wallet and register your business on the blockchain. This enables on-chain transaction proofs and smart contract settlements.
             </p>
             <motion.button
               className="btn btn-primary btn-lg"

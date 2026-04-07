@@ -7,7 +7,6 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Attach JWT token to every request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('opshub_token');
   if (token) {
@@ -17,35 +16,34 @@ api.interceptors.request.use((config) => {
 });
 
 // Auth
-export const login = (email, password) =>
-  api.post('/auth/login', { email, password });
+export const login = (email, password) => api.post('/auth/login', { email, password });
+export const enableBlockchain = (email) => api.post('/auth/enable-blockchain', { email });
 
-export const enableBlockchain = (email) =>
-  api.post('/auth/enable-blockchain', { email });
+// Blockchain & Payments
+export const getBlockchainStatus = (email) => api.get(`/blockchain/status/${encodeURIComponent(email)}`);
+export const getPaymentHistory = (email) => api.get(`/payments/history/${encodeURIComponent(email)}`);
+export const getTransaction = (id) => api.get(`/transactions/${encodeURIComponent(id)}`);
 
-// Blockchain
-export const getBlockchainStatus = (email) =>
-  api.get(`/blockchain/status/${encodeURIComponent(email)}`);
+export const createRazorpayOrder = (amount) => api.post('/payments/create-order', { amount });
+export const verifyRazorpayPayment = (data) => api.post('/payments/verify-payment', data);
 
-// Payments
-export const getPaymentHistory = (email) =>
-  api.get(`/payments/history/${encodeURIComponent(email)}`);
+// Escrow
+export const requestEscrow = (buyerEmail, sellerEmail, amount, deadlineDays) => api.post('/escrow/request', { buyerEmail, sellerEmail, amount, deadlineDays });
+export const payEscrow = (escrowId, paymentId) => api.post('/escrow/pay', { escrowId, paymentId });
+export const completeEscrow = (escrowId) => api.post('/escrow/complete', { escrowId });
+export const getEscrowDeals = (email) => api.get(`/escrow/user/${encodeURIComponent(email)}`);
+export const getEscrowAnalytics = (email) => api.get(`/escrow/analytics/${encodeURIComponent(email)}`);
+export const getPartnerRelationship = (email, partnerEmail) => api.get(`/escrow/relationship/${encodeURIComponent(email)}/${encodeURIComponent(partnerEmail)}`);
 
-// Transactions
-export const getTransaction = (id) =>
-  api.get(`/transactions/${encodeURIComponent(id)}`);
-
-export const createEscrow = (buyerEmail, sellerEmail, amount) =>
-  api.post('/escrow/create', { buyerEmail, sellerEmail, amount });
-
-export const completeEscrow = (dealId) =>
-  api.post('/escrow/complete', { dealId });
-
-export const getEscrowDeals = (email) =>
-  api.get(`/escrow/user/${encodeURIComponent(email)}`);
+// Network
+export const requestConnection = (from, to) => api.post('/network/request', { from, to });
+export const acceptConnection = (from, to) => api.post('/network/accept', { from, to });
+export const getMutualConnections = (email) => api.get(`/network/mutuals/${encodeURIComponent(email)}`);
+export const getPendingConnections = (email) => api.get(`/network/pending/${encodeURIComponent(email)}`);
+export const getAllUsers = (email) => api.get(`/network/users/${encodeURIComponent(email)}`);
+export const disconnectConnection = (from, to) => api.post('/network/disconnect', { from, to });
 
 // Business
-export const onboardBusiness = (name) =>
-  api.post('/business/onboard', { name });
+export const onboardBusiness = (name) => api.post('/business/onboard', { name });
 
 export default api;

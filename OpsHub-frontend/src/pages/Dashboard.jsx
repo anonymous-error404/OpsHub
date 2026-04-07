@@ -1,21 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { BarChart3, Users, Receipt, ArrowUpRight, TrendingUp, ExternalLink, Activity } from 'lucide-react';
-import { getPaymentHistory, getBlockchainStatus } from '../services/api';
+import { BarChart3, Users, Receipt, ArrowUpRight, TrendingUp, ExternalLink, Activity, ArrowDownLeft, ArrowUpRight as ArrowUpRightIcon } from 'lucide-react';
+import { getPaymentHistory, getBlockchainStatus, getEscrowDeals, getEscrowAnalytics } from '../services/api';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Filler,
+  Legend,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
 
-const MOCK_STATS = [
-  { icon: Receipt, label: 'Total Transactions', value: '1,284', trend: '+12.5%', positive: true },
-  { icon: BarChart3, label: 'Total Volume', value: '₹45.28L', trend: '+8.2%', positive: true },
-  { icon: Users, label: 'Escrow Deals', value: '42', trend: '+5.4%', positive: true },
-  { icon: TrendingUp, label: 'Verify Rate', value: '99.9%', trend: '+0.1%', positive: true },
-];
-
-const MOCK_ACTIVITY = [
-  { id: 1, type: 'Payment Proof Recorded', hash: '0x8a2f1c3e...f3e1', amount: '₹12,500', status: 'Verified', time: '2 min ago' },
-  { id: 2, type: 'Escrow Deal Created', hash: '0x9b3a2d4f...a1b2', amount: '₹85,000', status: 'Active', time: '15 min ago' },
-  { id: 3, type: 'Payment Proof Recorded', hash: '0x1c4e5f6a...d3c4', amount: '₹32,000', status: 'Verified', time: '1 hr ago' },
-  { id: 4, type: 'Escrow Completed', hash: '0x2d5f6a7b...e4d5', amount: '₹1,20,000', status: 'Settled', time: '3 hrs ago' },
-];
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Filler,
+  Legend
+);
 
 const containerVariants = {
   hidden: {},
@@ -27,7 +37,7 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] } },
 };
 
-const StatCard = ({ icon: Icon, label, value, trend, positive, index }) => (
+const StatCard = ({ icon: Icon, label, value, trend, positive }) => (
   <motion.div className="glass-card glass-card-glow" variants={itemVariants}>
     <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)' }}>
       <div className="stat-icon-wrap">
@@ -43,149 +53,213 @@ const StatCard = ({ icon: Icon, label, value, trend, positive, index }) => (
   </motion.div>
 );
 
-const statusBadge = (status) => {
-  if (status === 'Verified' || status === 'Settled') return 'badge-green';
-  if (status === 'Active') return 'badge-amber';
-  return 'badge-blue';
+const ActivityChart = ({ activity }) => {
+  const chartRef = useRef(null);
+  
+  const chartData = useMemo(() => {
+    const dataPoints = [...activity].reverse().slice(-10);
+    
+    return {
+      labels: dataPoints.map((_, i) => `Event ${i + 1}`),
+      datasets: [
+        {
+          fill: true,
+          label: 'Transaction Value (₹)',
+          data: dataPoints.map(item => parseFloat(String(item.amount).replace(/[₹,]/g, '')) || 0),
+          borderColor: 'rgba(255, 255, 255, 0.15)',
+          backgroundColor: (context) => {
+            const ctx = context.chart.ctx;
+            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, 'rgba(124, 58, 237, 0.2)');
+            gradient.addColorStop(1, 'rgba(124, 58, 237, 0)');
+            return gradient;
+          },
+          borderWidth: 1.5,
+          // Color points by direction
+          pointBackgroundColor: dataPoints.map(item => 
+            item.direction === 'INBOUND' ? '#4ade80' : '#a78bfa'
+          ),
+          pointBorderColor: '#111',
+          pointBorderWidth: 1.5,
+          pointHoverRadius: 7,
+          pointRadius: 5,
+          tension: 0.4,
+        },
+      ],
+    };
+  }, [activity]);
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: 'rgba(17, 17, 17, 0.95)',
+        titleFont: { size: 11, weight: 'bold' },
+        bodyFont: { size: 13, weight: '600' },
+        padding: 14,
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderWidth: 1,
+        cornerRadius: 8,
+        displayColors: true,
+        callbacks: {
+          label: (context) => {
+            const item = activity[activity.length - 1 - context.dataIndex];
+            const direction = item?.direction === 'INBOUND' ? ' [INBOUND]' : ' [OUTBOUND]';
+            return `₹${context.raw.toLocaleString()}${direction}`;
+          },
+          title: (context) => {
+            const item = activity[activity.length - 1 - context[0].dataIndex];
+            return item ? item.type : 'Event';
+          }
+        }
+      },
+    },
+    scales: {
+      x: { display: false },
+      y: {
+        display: true,
+        grid: { color: 'rgba(255, 255, 255, 0.03)', drawBorder: false },
+        ticks: {
+          color: 'rgba(255, 255, 255, 0.2)',
+          font: { size: 9, weight: 'bold' },
+          callback: (value) => `₹${value >= 1000 ? (value / 1000) + 'k' : value}`
+        }
+      },
+    },
+  };
+
+  return (
+    <div className="w-full h-full min-h-[300px] pt-4">
+      <Line ref={chartRef} data={chartData} options={options} />
+    </div>
+  );
 };
 
 const Dashboard = ({ user }) => {
   const [blockchainInfo, setBlockchainInfo] = useState(null);
+  const [stats, setStats] = useState([
+    { icon: Receipt, label: 'Total Transactions', value: '0', trend: 'Healthy', positive: true },
+    { icon: BarChart3, label: 'Total Volume', value: '₹0', trend: '+0%', positive: true },
+    { icon: Users, label: 'Smart Contracts', value: '0', trend: '0 Active', positive: true },
+    { icon: TrendingUp, label: 'Completion Rate', value: '100%', trend: '+0%', positive: true },
+  ]);
+  const [activity, setActivity] = useState([]);
 
   useEffect(() => {
     if (user?.email) {
-      getBlockchainStatus(user.email)
-        .then((res) => setBlockchainInfo(res.data))
-        .catch(() => {});
+      getBlockchainStatus(user.email).then(res => setBlockchainInfo(res.data)).catch(() => { });
+      getEscrowAnalytics(user.email).then(res => {
+        const d = res.data;
+        setStats([
+          { icon: Receipt, label: 'Total Transactions', value: String(d.totalTransactions), trend: d.overdueCount > 0 ? `-${d.overdueCount} Overdue` : 'Healthy', positive: d.overdueCount === 0 },
+          { icon: BarChart3, label: 'Total Volume', value: `₹${Number(d.totalVolume).toLocaleString('en-IN')}`, trend: '+0%', positive: true },
+          { icon: Users, label: 'Smart Contracts', value: String(d.escrowDeals), trend: `${d.activeCount} Active`, positive: true },
+          { icon: TrendingUp, label: 'Completion Rate', value: d.verifyRate, trend: '+0%', positive: true },
+        ]);
+      }).catch(() => { });
+
+      Promise.all([
+        getPaymentHistory(user.email).catch(() => ({ data: [] })),
+        getEscrowDeals(user.email).catch(() => ({ data: [] }))
+      ]).then(([paymentsRes, escrowsRes]) => {
+        const p = paymentsRes.data || [];
+        const e = escrowsRes.data || [];
+        const addr = user.wallet_address?.toLowerCase();
+
+        const mixed = [
+          ...p.map(x => ({ 
+            id: x.id || Math.random(), 
+            type: 'Payment Proof Recorded', 
+            amount: `₹${Number(x.amount).toLocaleString('en-IN')}`,
+            status: 'Verified',
+            timestamp: new Date(x.created_at).getTime(),
+            direction: x.to_wallet?.toLowerCase() === addr ? 'INBOUND' : 'OUTBOUND'
+          })),
+          ...e.map(x => ({ 
+            id: x.escrow_id || Math.random(), 
+            type: x.status === 'COMPLETED' ? 'Smart Contract Settled' : 'Contract Created',
+            amount: `₹${Number(x.amount).toLocaleString('en-IN')}`,
+            status: x.status === 'COMPLETED' ? 'Settled' : 'Active',
+            timestamp: new Date(x.created_at).getTime(),
+            direction: x.seller_wallet?.toLowerCase() === addr ? 'INBOUND' : 'OUTBOUND'
+          }))
+        ].sort((a, b) => b.timestamp - a.timestamp);
+        setActivity(mixed);
+      });
     }
   }, [user]);
 
   return (
-    <motion.div
-      className="flex flex-col gap-8"
-      variants={containerVariants}
-      initial="hidden"
-      animate="show"
-    >
-      {/* Stats Grid */}
+    <motion.div className="flex flex-col gap-8" variants={containerVariants} initial="hidden" animate="show">
       <div className="stat-grid">
-        {MOCK_STATS.map((stat, i) => (
-          <StatCard key={stat.label} {...stat} index={i} />
+        {stats.map((stat) => (
+          <StatCard key={stat.label} {...stat} />
         ))}
       </div>
 
-      {/* Main Content Grid */}
       <div className="grid grid-cols-3 gap-6">
-        {/* Recent Activity */}
-        <motion.div className="col-span-2 glass-panel p-6" variants={itemVariants}>
-          <div className="flex items-center justify-between mb-6">
+        <motion.div className="col-span-2 glass-panel p-6 flex flex-col" variants={itemVariants} style={{ minHeight: 420 }}>
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">
               <Activity size={18} style={{ color: 'var(--primary-light)' }} />
-              <h3>Recent Blockchain Activity</h3>
+              <h3 className="text-lg font-bold">Recent Blockchain Activity</h3>
             </div>
-            <button className="btn btn-ghost btn-sm">View All</button>
+            <div className="flex items-center gap-4">
+               <div className="flex items-center gap-1.5 backdrop-blur-md bg-white/[0.03] px-2 py-1 rounded-md border border-white/5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#4ade80]" />
+                  <span className="text-[9px] font-black uppercase text-secondary">In</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#a78bfa] ml-1" />
+                  <span className="text-[9px] font-black uppercase text-secondary">Out</span>
+               </div>
+               <div className="flex items-center gap-1">
+                 <span className="status-dot status-dot-green status-dot-pulse" />
+                 <span className="text-[10px] font-black uppercase tracking-widest text-secondary opacity-60">Verified Ledger</span>
+               </div>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-3">
-            {MOCK_ACTIVITY.map((item, i) => (
-              <motion.div
-                key={item.id}
-                className="flex items-center justify-between p-4"
-                style={{
-                  borderRadius: 'var(--radius-md)',
-                  background: 'var(--surface)',
-                  border: '1px solid var(--border)',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
-                initial={{ opacity: 0, x: -12 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 + i * 0.08 }}
-                whileHover={{ borderColor: 'rgba(255,255,255,0.15)', background: 'var(--surface-hover)' }}
-              >
-                <div className="flex items-center gap-4">
-                  <div className="stat-icon-wrap" style={{ width: 38, height: 38 }}>
-                    <Receipt size={17} />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-sm">{item.type}</p>
-                    <p className="font-mono text-secondary" style={{ fontSize: '0.7rem' }}>Tx: {item.hash}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div style={{ textAlign: 'right' }}>
-                    <p className="font-bold text-sm">{item.amount}</p>
-                    <p className="text-secondary" style={{ fontSize: '0.65rem' }}>{item.time}</p>
-                  </div>
-                  <span className={`badge ${statusBadge(item.status)}`}>{item.status}</span>
-                </div>
-              </motion.div>
-            ))}
+          <div className="flex-1 w-full relative">
+            {activity.length > 0 ? (
+               <ActivityChart activity={activity} />
+            ) : (
+              <div style={{ textAlign: 'center', padding: 'var(--space-8)', color: 'var(--text-tertiary)' }}>
+                <p className="text-sm opacity-50 italic">Syncing with decentralized ledger...</p>
+              </div>
+            )}
+          </div>
+          
+          <div className="mt-6 pt-5 border-t border-white/[0.03] flex justify-between items-center">
+             <div className="flex flex-col">
+                <span className="text-xs font-bold text-white/80 uppercase tracking-wide">Audit-Smart Contract History</span>
+             </div>
+             <div className="text-[10px] font-black uppercase tracking-widest text-white opacity-100 bg-white/5 px-4 py-2 rounded-lg border border-white/10 pointer-events-none shadow-glow">
+                Contract Lifecycle Status
+             </div>
           </div>
         </motion.div>
 
-        {/* Business Identity Panel */}
         <motion.div className="glass-panel p-6" variants={itemVariants}>
-          <h3 style={{ marginBottom: 'var(--space-6)' }}>Business Identity</h3>
-
+          <h3 className="text-lg font-bold" style={{ marginBottom: 'var(--space-6)' }}>Business Identity</h3>
           <div className="flex flex-col gap-4">
-            <div style={{
-              padding: 'var(--space-4)',
-              borderRadius: 'var(--radius-md)',
-              background: 'var(--primary-glow)',
-              border: '1px solid rgba(124,58,237,0.25)',
-            }}>
+            <div style={{ padding: 'var(--space-4)', borderRadius: 'var(--radius-md)', background: 'var(--primary-glow)', border: '1px solid rgba(124,58,237,0.25)' }}>
               <p className="uppercase tracking-wider font-bold" style={{ fontSize: '0.65rem', color: 'var(--primary-light)', marginBottom: 'var(--space-1)' }}>On-Chain Name</p>
               <p className="font-bold text-lg">{user?.name || 'Your Business'}</p>
             </div>
-
-            <div style={{
-              padding: 'var(--space-4)',
-              borderRadius: 'var(--radius-md)',
-              background: 'var(--surface)',
-              border: '1px solid var(--border)',
-            }}>
+            <div style={{ padding: 'var(--space-4)', borderRadius: 'var(--radius-md)', background: 'var(--surface)', border: '1px solid var(--border)' }}>
               <p className="uppercase tracking-wider font-bold" style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)', marginBottom: 'var(--space-1)' }}>Wallet Address</p>
               <div className="flex items-center gap-2">
-                <p className="font-mono text-sm truncate" style={{ color: 'var(--text-secondary)' }}>
-                  {user?.wallet_address || '—'}
-                </p>
-                {user?.wallet_address && (
-                  <button className="btn-icon" style={{ flexShrink: 0 }}>
-                    <ExternalLink size={13} />
-                  </button>
-                )}
+                <p className="font-mono text-[10px] break-all" style={{ color: 'var(--text-secondary)' }}>{user?.wallet_address || '—'}</p>
               </div>
             </div>
-
-            <div style={{
-              padding: 'var(--space-4)',
-              borderRadius: 'var(--radius-md)',
-              background: 'var(--surface)',
-              border: '1px solid var(--border)',
-            }}>
+            <div style={{ padding: 'var(--space-4)', borderRadius: 'var(--radius-md)', background: 'var(--surface)', border: '1px solid var(--border)' }}>
               <p className="uppercase tracking-wider font-bold" style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)', marginBottom: 'var(--space-1)' }}>Blockchain Status</p>
               <div className="flex items-center gap-2">
                 <span className={`status-dot ${user?.blockchain_enabled ? 'status-dot-green' : 'status-dot-amber'} status-dot-pulse`} />
-                <p className="text-sm font-medium">
-                  {user?.blockchain_enabled ? 'Enabled & Verified' : 'Not Activated'}
-                </p>
+                <p className="text-xs font-bold uppercase tracking-widest text-secondary">{user?.blockchain_enabled ? 'SECURE_ACTIVE' : 'NOT_SYNCED'}</p>
               </div>
             </div>
-
-            {blockchainInfo?.tx && (
-              <div style={{
-                padding: 'var(--space-4)',
-                borderRadius: 'var(--radius-md)',
-                background: 'var(--surface)',
-                border: '1px solid var(--border)',
-              }}>
-                <p className="uppercase tracking-wider font-bold" style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)', marginBottom: 'var(--space-1)' }}>Registration Tx</p>
-                <p className="font-mono truncate" style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
-                  {blockchainInfo.tx}
-                </p>
-              </div>
-            )}
           </div>
         </motion.div>
       </div>

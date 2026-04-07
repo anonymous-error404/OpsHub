@@ -4,8 +4,9 @@ import { motion } from 'framer-motion';
 
 const pageTitles = {
   dashboard: { title: 'Dashboard', desc: 'Overview of your blockchain-backed business operations.' },
+  network: { title: 'Business Network', desc: 'Connect with mutual businesses to initiate secure smart contracts.' },
   transactions: { title: 'Transactions', desc: 'All payment proofs recorded on-chain.' },
-  escrow: { title: 'Escrow Deals', desc: 'Secure escrow settlements with blockchain verification.' },
+  'smart-contracts': { title: 'Smart Contracts', desc: 'Secure smart contract settlements with blockchain verification.' },
   settings: { title: 'Settings', desc: 'Manage your blockchain identity and account preferences.' },
 };
 
@@ -33,7 +34,7 @@ const Layout = ({ children, activeTab, setActiveTab, user, onLogout }) => {
               <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--primary-gradient)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700, color: 'white' }}>
                 {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
               </div>
-              <span className="text-sm font-medium" style={{ maxWidth: 120 }} className="truncate text-sm font-medium">
+              <span className="truncate text-sm font-medium" style={{ maxWidth: 120 }}>
                 {user?.name || user?.email || 'User'}
               </span>
             </div>

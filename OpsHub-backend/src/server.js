@@ -22,8 +22,8 @@ const blockchainRoutes =
 const paymentHistory =
     require("./routes/paymentHistoryRoutes");
 
-const escrowRoutes =
-    require("./routes/escrowRoutes");
+const escrowRoutes = require("./routes/escrowRoutes");
+const networkRoutes = require("./routes/networkRoutes");
 
 const app =
     express();
@@ -60,10 +60,8 @@ app.use(
     paymentHistory
 );
 
-app.use(
-    "/escrow",
-    escrowRoutes
-);
+app.use("/escrow", escrowRoutes);
+app.use("/network", networkRoutes);
 
 app.listen(
 

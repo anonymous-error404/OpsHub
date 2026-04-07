@@ -10,6 +10,28 @@
       "locked_at": null,
       "verified_at": null,
       "completed_at": null
+    },
+    {
+      "contract_id": "contract_c063c0c19e27",
+      "buyer_id": "0xF94473aD0f05Ab933829A203dd1D2955539e8a33",
+      "seller_id": "0x7659999c1692dBf754b5Ad77246448D301c4c8AB",
+      "amount": 5000.0,
+      "status": "COMPLETED",
+      "created_at": "2026-04-08T00:56:20.546536",
+      "locked_at": "2026-04-08T00:56:59.594894",
+      "verified_at": "2026-04-08T01:11:54.023801",
+      "completed_at": "2026-04-08T01:11:54.050932"
+    },
+    {
+      "contract_id": "contract_8aa2978aefee",
+      "buyer_id": "0x7659999c1692dBf754b5Ad77246448D301c4c8AB",
+      "seller_id": "0xF94473aD0f05Ab933829A203dd1D2955539e8a33",
+      "amount": 1000.0,
+      "status": "COMPLETED",
+      "created_at": "2026-04-08T01:11:44.332519",
+      "locked_at": "2026-04-08T01:14:00.636025",
+      "verified_at": "2026-04-08T01:26:11.297260",
+      "completed_at": "2026-04-08T01:44:00.636025"
     }
   ]
 }

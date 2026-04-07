@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import TransactionsPage from './pages/TransactionsPage';
-import EscrowPage from './pages/EscrowPage';
+import ContractsPage from './pages/ContractsPage';
 import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
+import NetworkPage from './pages/NetworkPage';
 import { ToastProvider } from './components/Toast';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -48,10 +49,12 @@ function App() {
     switch (activeTab) {
       case 'dashboard':
         return <Dashboard user={user} />;
+      case 'network':
+        return <NetworkPage user={user} />;
       case 'transactions':
         return <TransactionsPage user={user} />;
-      case 'escrow':
-        return <EscrowPage user={user} />;
+      case 'smart-contracts':
+        return <ContractsPage user={user} />;
       case 'settings':
         return <SettingsPage user={user} onUserUpdate={handleUserUpdate} />;
       default:
