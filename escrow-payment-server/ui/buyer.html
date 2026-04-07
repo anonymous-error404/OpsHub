@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Escrow Payment - Buyer</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #0a0a0f;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+.pg-root {
+  font-family: 'DM Sans', sans-serif;
+  background: #0a0a0f;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.pg-card {
+  width: 100%;
+  max-width: 480px;
+  background: #12121a;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.06);
+  overflow: hidden;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+}
+
+.pg-header {
+  padding: 24px 28px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pg-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pg-brand-icon {
+  width: 28px;
+  height: 28px;
+  background: #3b82f6;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pg-brand-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.pg-brand-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: -0.2px;
+}
+
+.pg-secure-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: #4ade80;
+  font-weight: 500;
+}
+
+.pg-secure-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4ade80;
+  animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.pg-amount-section {
+  padding: 28px 28px 24px;
+  background: linear-gradient(180deg, #1a1a2e 0%, #12121a 100%);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.pg-amount-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.pg-amount-value {
+  font-size: 36px;
+  font-weight: 300;
+  color: #fff;
+  letter-spacing: -1px;
+  font-family: 'DM Mono', monospace;
+}
+
+.pg-amount-value span {
+  font-size: 22px;
+  opacity: 0.6;
+  font-weight: 300;
+}
+
+.pg-contract-row {
+  display: flex;
+  gap: 20px;
+  margin-top: 16px;
+}
+
+.pg-contract-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pg-chip-label {
+  font-size: 10px;
+  color: rgba(255,255,255,0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.pg-chip-value {
+  font-size: 12px;
+  color: rgba(255,255,255,0.7);
+  font-family: 'DM Mono', monospace;
+}
+
+.pg-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.2);
+  color: #4ade80;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.4px;
+  margin-top: 4px;
+  align-self: flex-end;
+}
+
+.pg-body { padding: 24px 28px; }
+
+.pg-section-label {
+  font-size: 11px;
+  color: rgba(255,255,255,0.3);
+  font-weight: 500;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+.pg-upi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.pg-upi-btn {
+  background: #1c1c28;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px;
+  padding: 12px 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+}
+
+.pg-upi-btn:hover {
+  background: #22223a;
+  border-color: rgba(59,130,246,0.4);
+  transform: translateY(-1px);
+}
+
+.pg-upi-btn.active {
+  background: rgba(59,130,246,0.1);
+  border-color: rgba(59,130,246,0.6);
+}
+
+.pg-upi-logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.pg-upi-name {
+  font-size: 10px;
+  color: rgba(255,255,255,0.5);
+  font-weight: 500;
+}
+
+.pg-upi-btn.active .pg-upi-name { color: #3b82f6; }
+
+.pg-input-wrap {
+  position: relative;
+  margin-bottom: 8px;
+}
+
+.pg-input {
+  width: 100%;
+  background: #1c1c28;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px;
+  padding: 13px 16px;
+  font-size: 14px;
+  font-family: 'DM Mono', monospace;
+  color: #fff;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.pg-input::placeholder { color: rgba(255,255,255,0.2); }
+
+.pg-input:focus {
+  border-color: rgba(59,130,246,0.5);
+  background: #1e1e2e;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.08);
+}
+
+.pg-input-hint {
+  font-size: 11px;
+  color: rgba(255,255,255,0.25);
+  padding: 4px 4px 14px;
+}
+
+.pg-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.pg-divider-line {
+  flex: 1;
+  height: 1px;
+  background: rgba(255,255,255,0.05);
+}
+
+.pg-divider-text {
+  font-size: 11px;
+  color: rgba(255,255,255,0.2);
+  font-weight: 500;
+}
+
+.pg-pay-btn, .pg-delivery-btn {
+  width: 100%;
+  background: #3b82f6;
+  border: none;
+  border-radius: 10px;
+  padding: 15px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.pg-pay-btn::before, .pg-delivery-btn::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transition: left 0.5s;
+}
+
+.pg-pay-btn:hover::before, .pg-delivery-btn:hover::before { left: 100%; }
+.pg-pay-btn:hover, .pg-delivery-btn:hover { background: #2563eb; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(59,130,246,0.35); }
+.pg-pay-btn:active, .pg-delivery-btn:active { transform: translateY(0); }
+.pg-pay-btn:disabled, .pg-delivery-btn:disabled { background: #1e1e2e; color: rgba(255,255,255,0.2); cursor: not-allowed; box-shadow: none; transform: none; }
+
+.pg-footer {
+  padding: 14px 28px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.pg-footer-text {
+  font-size: 11px;
+  color: rgba(255,255,255,0.2);
+}
+
+.pg-footer svg { opacity: 0.3; }
+
+.pg-error-text {
+  font-size: 12px;
+  color: #f87171;
+  padding: 0 4px 12px;
+  display: none;
+}
+
+.pg-error-text.show { display: block; }
+
+.pg-success-overlay {
+  position: absolute;
+  inset: 0;
+  background: #12121a;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+  padding: 32px;
+  text-align: center;
+}
+
+.pg-success-overlay.show {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.pg-card-wrap {
+  position: relative;
+}
+
+.pg-success-ring {
+  width: 80px;
+  height: 80px;
+  position: relative;
+  margin: 0 auto 20px;
+}
+
+.tick-circle circle {
+  fill: none;
+  stroke: #4ade80;
+  stroke-width: 2.5;
+  stroke-dasharray: 226;
+  stroke-dashoffset: 226;
+  stroke-linecap: round;
+  transform-origin: center;
+  transform: rotate(-90deg);
+}
+
+.tick-circle.animate circle {
+  animation: draw-circle 0.5s cubic-bezier(0.4,0,0.2,1) 0.05s forwards;
+}
+
+.tick-check polyline {
+  fill: none;
+  stroke: #4ade80;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 60;
+  stroke-dashoffset: 60;
+}
+
+.tick-check.animate polyline {
+  animation: draw-check 0.4s cubic-bezier(0.22,1,0.36,1) 0.45s forwards;
+}
+
+@keyframes draw-circle {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes draw-check {
+  to { stroke-dashoffset: 0; }
+}
+
+.pg-success-title {
+  font-size: 20px;
+  font-weight: 500;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.pg-success-amount {
+  font-family: 'DM Mono', monospace;
+  font-size: 28px;
+  font-weight: 300;
+  color: #4ade80;
+  margin-bottom: 10px;
+}
+
+.pg-success-sub {
+  font-size: 13px;
+  color: rgba(255,255,255,0.3);
+  margin-bottom: 28px;
+  line-height: 1.6;
+}
+
+.pg-success-close {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 11px 28px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pg-success-close:hover {
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.8);
+}
+
+.spinner-ring {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin-ring 0.7s linear infinite;
+  display: none;
+}
+
+@keyframes spin-ring {
+  to { transform: rotate(360deg); }
+}
+
+.pg-delivery-panel {
+  display: none;
+}
+
+.pg-delivery-panel.show {
+  display: block;
+}
+
+.pg-delivery-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 0;
+}
+
+.pg-delivery-actions .pg-delivery-btn {
+  padding: 12px;
+  font-size: 13px;
+  margin: 0;
+  background: #1e1e2e;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.7);
+  transition: all 0.2s ease;
+}
+
+.pg-delivery-actions .pg-delivery-btn:hover {
+  background: #2a2a3e;
+  border-color: rgba(255,255,255,0.2);
+  color: #fff;
+}
+
+.pg-delivery-actions .confirm-btn {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
+}
+
+.pg-delivery-actions .confirm-btn:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.pg-delivery-actions .dispute-btn {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: #fff;
+}
+
+.pg-delivery-actions .dispute-btn:hover {
+  background: #dc2626;
+}
+
+.pg-payment-panel {
+  display: block;
+}
+
+.pg-payment-panel.hidden {
+  display: none;
+}
+</style>
+
+<div class="pg-root">
+  <div class="pg-card-wrap">
+    <div class="pg-card" id="mainCard">
+      <div class="pg-header">
+        <div class="pg-brand">
+          <div class="pg-brand-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="5" y="11" width="14" height="9" rx="1" stroke="white" stroke-width="1.5" fill="none"/>
+              <path d="M7 11V8C7 5.24 9.24 3 12 3C14.76 3 17 5.24 17 8V11" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="pg-brand-name">Escrow</div>
+        </div>
+        <div class="pg-secure-badge">
+          <div class="pg-secure-dot"></div>
+          Buyer
+        </div>
+      </div>
+
+      <div class="pg-amount-section">
+        <div class="pg-amount-label">Amount to Pay</div>
+        <div class="pg-amount-value">₹<span id="amount">50,000</span></div>
+        <div class="pg-contract-row">
+          <div class="pg-contract-chip">
+            <div class="pg-chip-label">Contract ID</div>
+            <div class="pg-chip-value" id="contractId">contract_xxx</div>
+          </div>
+          <div class="pg-contract-chip">
+            <div class="pg-chip-label">Status</div>
+            <div class="pg-status-pill" id="statusPill">CREATED</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAYMENT PANEL -->
+      <div class="pg-payment-panel" id="paymentPanel">
+        <div class="pg-body">
+          <div class="pg-section-label">Choose Payment Method</div>
+          <div class="pg-upi-grid">
+            <button class="pg-upi-btn" onclick="selectUPI(this, 'gpay')">
+              <div class="pg-upi-logo" style="background:rgba(66,133,244,0.15)">
+                <img src="/static/Google_Pay-Logo.wine.svg" alt="Google Pay" style="width:32px;height:32px;object-fit:contain;">
+              </div>
+              <span class="pg-upi-name">Google Pay</span>
+            </button>
+            <button class="pg-upi-btn" onclick="selectUPI(this, 'phonepe')">
+              <div class="pg-upi-logo" style="background:rgba(99,60,180,0.15)">
+                <img src="/static/PhonePe-Logo.wine.svg" alt="PhonePe" style="width:32px;height:32px;object-fit:contain;">
+              </div>
+              <span class="pg-upi-name">PhonePe</span>
+            </button>
+            <button class="pg-upi-btn" onclick="selectUPI(this, 'paytm')">
+              <div class="pg-upi-logo" style="background:rgba(0,188,212,0.15)">
+                <img src="/static/Paytm-Logo.wine.svg" alt="Paytm" style="width:32px;height:32px;object-fit:contain;">
+              </div>
+              <span class="pg-upi-name">Paytm</span>
+            </button>
+          </div>
+
+          <div class="pg-input-wrap">
+            <input class="pg-input" id="vpaInput" type="text" placeholder="username@upi" autocomplete="off" />
+          </div>
+          <div class="pg-input-hint">Enter your UPI ID or VPA</div>
+          <div class="pg-error-text" id="errText"></div>
+
+          <button class="pg-pay-btn" id="payBtn" onclick="handlePay()">
+            <span id="payBtnText">Pay ₹50,000</span>
+            <div class="spinner-ring" id="paySpinner"></div>
+          </button>
+        </div>
+
+        <div class="pg-footer">
+          <svg width="12" height="14" viewBox="0 0 12 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="1" y="5" width="10" height="8" rx="1.5" stroke="white" stroke-width="1.2"/>
+            <path d="M3.5 5V3.5C3.5 2.12 4.62 1 6 1C7.38 1 8.5 2.12 8.5 3.5V5" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+          <span class="pg-footer-text">256-bit SSL · PCI DSS compliant · Funds held in escrow</span>
+        </div>
+      </div>
+
+      <!-- DELIVERY CONFIRMATION PANEL -->
+      <div class="pg-delivery-panel" id="deliveryPanel">
+        <div class="pg-body">
+          <div class="pg-section-label">Delivery Status</div>
+          <div style="text-align: center; margin-bottom: 24px;">
+            <div style="font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 4px;">Payment received and secured</div>
+            <div style="font-size: 12px; color: rgba(255,255,255,0.3);">Please confirm when you receive the goods/services</div>
+          </div>
+
+          <div class="pg-delivery-actions">
+            <button class="pg-delivery-btn confirm-btn" onclick="confirmDelivery()">
+              <span id="confirmBtnText">Confirm Delivery</span>
+              <div class="spinner-ring" id="confirmSpinner"></div>
+            </button>
+            <button class="pg-delivery-btn dispute-btn" onclick="raiseDispute()">
+              Raise Dispute
+            </button>
+          </div>
+        </div>
+
+        <div class="pg-footer">
+          <svg width="12" height="14" viewBox="0 0 12 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="1" y="5" width="10" height="8" rx="1.5" stroke="white" stroke-width="1.2"/>
+            <path d="M3.5 5V3.5C3.5 2.12 4.62 1 6 1C7.38 1 8.5 2.12 8.5 3.5V5" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+          <span class="pg-footer-text">Funds protected until delivery confirmed</span>
+        </div>
+      </div>
+
+      <div class="pg-success-overlay" id="successOverlay">
+        <div class="pg-success-ring">
+          <svg class="tick-circle" viewBox="0 0 80 80" width="80" height="80">
+            <circle cx="40" cy="40" r="36"/>
+          </svg>
+          <svg class="tick-check" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)" width="36" height="36" viewBox="0 0 36 36">
+            <polyline points="7,19 15,27 29,11"/>
+          </svg>
+        </div>
+        <div class="pg-success-title">Payment secured!</div>
+        <div class="pg-success-amount">₹<span id="successAmount">50,000</span></div>
+        <div class="pg-success-sub">Funds held in escrow<br>Ready for delivery</div>
+        <button class="pg-success-close" onclick="resetPayment()">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentContractId = null;
+let currentAmount = null;
+
+async function loadContract() {
+  try {
+    const response = await fetch('/contracts');
+    const data = await response.json();
+
+    console.log('Loaded contracts:', data); // Debug log
+
+    if (data.contracts && data.contracts.length > 0) {
+      // Get the first contract in CREATED state, or fallback to the last one
+      let contract = data.contracts.find(c => c.status === 'CREATED');
+      if (!contract) {
+        contract = data.contracts[data.contracts.length - 1]; // Fallback
+      }
+      
+      console.log('Selected contract:', contract); // Debug log
+      
+      currentContractId = contract.contract_id;
+      currentAmount = contract.amount;
+
+      document.getElementById('contractId').textContent = contract.contract_id;
+      document.getElementById('amount').textContent = contract.amount.toLocaleString('en-IN');
+      document.getElementById('payBtnText').textContent = `Pay ₹${contract.amount.toLocaleString('en-IN')}`;
+      
+      updateStatusPill(contract.status);
+
+      // Setup view based on current status
+      if (contract.status === 'LOCKED' || contract.status === 'EXECUTED') {
+        document.getElementById('paymentPanel').classList.add('hidden');
+        document.getElementById('deliveryPanel').classList.add('show');
+      }
+    }
+  } catch (error) {
+    console.error('Failed to load contract:', error);
+  }
+}
+
+function updateStatusPill(status) {
+  const pill = document.getElementById('statusPill');
+  pill.textContent = status;
+  
+  const statusColors = {
+    'CREATED': 'rgba(59,130,246,0.1)',
+    'LOCKED': 'rgba(250,204,21,0.1)',
+    'EXECUTED': 'rgba(139,92,246,0.1)',
+    'COMPLETED': 'rgba(74,222,128,0.1)',
+    'CANCELLED': 'rgba(239,68,68,0.1)'
+  };
+  
+  const statusTextColors = {
+    'CREATED': '#3b82f6',
+    'LOCKED': '#fcc34d',
+    'EXECUTED': '#a78bfa',
+    'COMPLETED': '#4ade80',
+    'CANCELLED': '#f87171'
+  };
+  
+  pill.style.background = statusColors[status] || 'rgba(59,130,246,0.1)';
+  pill.style.color = statusTextColors[status] || '#3b82f6';
+}
+
+function selectUPI(el, app) {
+  document.querySelectorAll('.pg-upi-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  const hints = { gpay: 'mobilenumber@okaxis', phonepe: 'mobilenumber@ybl', paytm: 'mobilenumber@paytm', other: 'username@upi' };
+  document.getElementById('vpaInput').placeholder = hints[app] || 'username@upi';
+}
+
+async function handlePay() {
+  const vpa = document.getElementById('vpaInput').value.trim();
+  const errEl = document.getElementById('errText');
+  errEl.classList.remove('show');
+
+  if (!vpa) {
+    errEl.textContent = 'Please enter your UPI ID to continue';
+    errEl.classList.add('show');
+    document.getElementById('vpaInput').focus();
+    return;
+  }
+  if (!vpa.includes('@')) {
+    errEl.textContent = 'Invalid UPI ID — must contain @';
+    errEl.classList.add('show');
+    return;
+  }
+
+  const btn = document.getElementById('payBtn');
+  const text = document.getElementById('payBtnText');
+  const spinner = document.getElementById('paySpinner');
+  const initialBtnText = text.textContent; // Save original button text
+  
+  btn.disabled = true;
+  text.textContent = 'Processing';
+  spinner.style.display = 'block';
+
+  try {
+    const response = await fetch(`/initiate-payment/${currentContractId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    console.log('Payment API Response:', response.status, response.ok); // Debug log
+
+    if (response.ok) {
+      // Payment successful - show success overlay with animation
+      const overlay = document.getElementById('successOverlay');
+      const tickCircle = overlay.querySelector('.tick-circle');
+      const tickCheck = overlay.querySelector('.tick-check');
+      
+      // Remove animation classes to reset
+      tickCircle.classList.remove('animate');
+      tickCheck.classList.remove('animate');
+      
+      // Force browser reflow to restart animation
+      void tickCircle.offsetWidth;
+      void tickCheck.offsetWidth;
+      
+      // Add animation classes to trigger animation
+      tickCircle.classList.add('animate');
+      tickCheck.classList.add('animate');
+
+      // Update success overlay text
+      overlay.querySelector('.pg-success-title').textContent = 'Payment secured!';
+      overlay.querySelector('.pg-success-sub').innerHTML = 'Funds held in escrow<br>Ready for delivery';
+      document.getElementById('successAmount').textContent = currentAmount.toLocaleString('en-IN');
+      
+      // Show the success overlay
+      overlay.classList.add('show');
+      
+      // Update status
+      updateStatusPill('LOCKED');
+
+      // Reset button
+      btn.disabled = false;
+      text.textContent = initialBtnText;
+      spinner.style.display = 'none';
+    } else {
+      let errorMessage = 'Payment failed. Please try again.';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.detail || errorData.error || errorMessage;
+      } catch (e) {
+        // If response is not JSON, use generic message
+        errorMessage = `Payment failed (${response.status}). Please try again.`;
+      }
+      errEl.textContent = errorMessage;
+      errEl.classList.add('show');
+      
+      btn.disabled = false;
+      text.textContent = initialBtnText;
+      spinner.style.display = 'none';
+    }
+  } catch (error) {
+    console.error('Payment error:', error);
+    errEl.textContent = 'Error processing payment: ' + error.message;
+    errEl.classList.add('show');
+    
+    btn.disabled = false;
+    text.textContent = initialBtnText;
+    spinner.style.display = 'none';
+  }
+}
+
+async function confirmDelivery() {
+  const btn = document.querySelector('.pg-delivery-actions .pg-delivery-btn:first-child');
+  const spinner = document.getElementById('confirmSpinner');
+  btn.disabled = true;
+  spinner.style.display = 'block';
+
+  try {
+    console.log('Confirming delivery for contract:', currentContractId);
+    const response = await fetch(`/confirm-delivery/${currentContractId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    console.log('Delivery confirmation response status:', response.status);
+    
+    await new Promise(r => setTimeout(r, 1000));
+
+    if (response.ok) {
+      console.log('Delivery confirmed! Showing tick animation...');
+      // Show success animation
+      const overlay = document.getElementById('successOverlay');
+      const tickCircle = overlay.querySelector('.tick-circle');
+      const tickCheck = overlay.querySelector('.tick-check');
+      
+      // Reset animations
+      tickCircle.classList.remove('animate');
+      tickCheck.classList.remove('animate');
+      
+      // Force reflow to restart animation
+      void tickCircle.offsetWidth;
+      void tickCheck.offsetWidth;
+      
+      // Start animations
+      tickCircle.classList.add('animate');
+      tickCheck.classList.add('animate');
+
+      // Set text for Delivery Success
+      overlay.querySelector('.pg-success-title').textContent = 'Delivery Confirmed!';
+      overlay.querySelector('.pg-success-sub').innerHTML = 'Funds released to seller<br>Transaction Complete';
+
+      document.getElementById('successAmount').textContent = currentAmount.toLocaleString('en-IN');
+      
+      // Show the overlay with tick animation
+      overlay.classList.add('show');
+      console.log('Success overlay shown with tick animation');
+      
+      updateStatusPill('COMPLETED');
+    } else {
+      console.error('Delivery confirmation failed:', response.status);
+    }
+  } catch (error) {
+    console.error('Error confirming delivery:', error);
+  }
+
+  btn.disabled = false;
+  spinner.style.display = 'none';
+}
+
+function raiseDispute() {
+  alert('Dispute raised. Our support team will contact you shortly.');
+}
+
+function resetPayment() {
+  console.log('resetPayment called');
+  document.getElementById('successOverlay').classList.remove('show');
+  
+  const statusPill = document.getElementById('statusPill').textContent;
+  console.log('Current status:', statusPill);
+  
+  if (statusPill === 'LOCKED') {
+    // After payment confirmed - show delivery panel
+    console.log('Status is LOCKED - showing delivery panel');
+    document.getElementById('paymentPanel').classList.add('hidden');
+    document.getElementById('deliveryPanel').classList.add('show');
+  } else if (statusPill === 'COMPLETED') {
+    // After delivery confirmed - hide everything, show final state
+    console.log('Status is COMPLETED - hiding delivery panel and payment panel');
+    document.getElementById('deliveryPanel').classList.remove('show');
+    document.getElementById('paymentPanel').classList.add('hidden');
+    
+    // Show a "Transaction Complete" message instead
+    const finalState = document.getElementById('finalStateMessage');
+    if (finalState) {
+      finalState.classList.add('show');
+    } else {
+      // Create the final state message if it doesn't exist
+      const message = document.createElement('div');
+      message.id = 'finalStateMessage';
+      message.style.cssText = `
+        text-align: center;
+        padding: 48px 24px;
+        color: rgba(255,255,255,0.7);
+      `;
+      message.innerHTML = `
+        <div style="font-size: 18px; margin-bottom: 12px;">✅ Transaction Complete</div>
+        <div style="font-size: 13px; color: rgba(255,255,255,0.5);">Funds have been released to the seller</div>
+      `;
+      document.querySelector('.pg-card-wrap').appendChild(message);
+    }
+  }
+}
+
+// Load contract on page load
+loadContract();
+</script>
+</head>
+<body>
+</body>
+</html>
